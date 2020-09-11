@@ -103,7 +103,14 @@ public class VideoEditActivity extends FragmentActivity implements PopBubbleView
     private PopPasterView popPasterView;
 
     private int[] bubbleArray = new int[]{
-            R.drawable.bubbleone, R.drawable.bubbletwo, R.drawable.bubblethree, R.drawable.bubblefour, R.drawable.bubblefive, R.drawable.bubblesix, R.drawable.bubbleseven, R.drawable.bubbleeight
+            R.drawable.bubbleone,
+            R.drawable.bubbletwo,
+            R.drawable.bubblethree,
+            R.drawable.bubblefour,
+            R.drawable.bubblefive,
+            R.drawable.bubblesix,
+            R.drawable.bubbleseven,
+            R.drawable.bubbleeight
     };
     private String mVideoPath = "/storage/emulated/0/ych/1234.mp4";
     public int mVideoHeight, mVideoWidth, mVideoDuration; //mIsNotComeLocal 1表示拍摄,mIsAnswer 1表示回答者

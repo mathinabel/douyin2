@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.OrientationHelper;
@@ -35,9 +34,10 @@ import com.aserbao.androidcustomcamera.douyin.homepage.viewpager.OnViewPagerList
 import com.aserbao.androidcustomcamera.douyin.homepage.viewpager.ViewPagerLayoutManager;
 import com.aserbao.androidcustomcamera.whole.WholeActivity;
 import com.aserbao.androidcustomcamera.whole.record.RecorderActivity;
-import com.danikula.videocache.HttpProxyCacheServer;
-import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
+import com.bumptech.glide.Glide;
 
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
     private ViewPagerLayoutManager mLayoutManager;
     private ImageView takephoto;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,13 +77,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageRelease(boolean isNext, int position) {
                 Log.e(TAG, "释放位置:" + position + " 下一页:" + isNext);
-                int index3 = 0;
+                int index = 0;
                 if (isNext) {
-                    index3 = 0;
+                    index = 0;
                 } else {
-                    index3 = 1;
+                    index = 1;
                 }
-                releaseVideo(index3);
+                releaseVideo(index);
             }
 
             @Override
@@ -116,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         final ImageView imgThumb = itemView.findViewById(R.id.img_thumb);
         final RelativeLayout rootView = itemView.findViewById(R.id.root_view);
         final MediaPlayer[] mediaPlayer = new MediaPlayer[1];
-
+        videoView.start();
         videoView.setOnInfoListener(new MediaPlayer.OnInfoListener() {
             @Override
             public boolean onInfo(MediaPlayer mp, int what, int extra) {
@@ -131,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 Log.e(TAG, "onPrepared");
-                videoView.start();
+                //   videoView.start();
 
 
             }
@@ -169,10 +170,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-        private int[] imgs = {R.mipmap.img_video_1, R.mipmap.img_video_2};
+        private int[] imgs = {R.mipmap.default_img};
         private int[] videos = {R.raw.video_1, R.raw.video_2};
-        private   List list = new ArrayList();
-        String VIDEO_URL ="http://www.youdiandongxigame.top//mp4/";
+        private List list = new ArrayList();
+
+        String VIDEO_URL = "https://t002.obs.cn-east-2.myhuaweicloud.com/";
+
         public MyAdapter() {
 
         }
@@ -188,16 +191,21 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-         //   holder.img_thumb.setImageResource(imgs[position % 2]);
-         //   holder.videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + videos[position % 2]));
-         //   holder.videoView.setMediaController(new MediaController(MainActivity.this));
-            HttpProxyCacheServer proxy = MyApplication.getProxy();
+           // holder.img_thumb.setImageResource(imgs[0]);
 
-            String NEWURL =VIDEO_URL+((int)(Math.random()*100))+".mp4";
-            String proxyUrl = proxy.getProxyUrl(NEWURL);
 
+
+            // holder.videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + videos[position % 2]));
+            // holder.videoView.setMediaController(new MediaController(MainActivity.this));
+            // HttpProxyCacheServer proxy = MyApplication.getProxy();
+
+            String NEWURL = VIDEO_URL + ((int) (Math.random() * 35)) + ".mp4";
+            // String proxyUrl = proxy.getProxyUrl(NEWURL);
+            // Glide.with((holder.img_thumb.getContext())).load(Uri.parse(NEWURL)).into(holder.img_thumb);
             holder.videoView.setVideoPath(NEWURL);
-            holder.commit.setOnClickListener(new View.OnClickListener() {
+
+
+          /*  holder.commit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
@@ -234,19 +242,19 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                  /*          if (slideOffset>100f){
+                            if (slideOffset > 100f) {
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                            }else if (slideOffset<-100f){
+                            } else if (slideOffset < -100f) {
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
 
-                            }*/
+                            }
                         }
                     });
-              //      String[] data ={"aa","bb","cc","dd","aa","bb","cc","dd","aa","bb"};
-                //      holder.listView.setAdapter(new ArrayAdapter<String>(MainActivity.this,R.layout.commits_list_contact,data));
+                    //     String[] data ={"aa","bb","cc","dd","aa","bb","cc","dd","aa","bb"};
+                    //      holder.listView.setAdapter(new ArrayAdapter<String>(MainActivity.this,R.layout.commits_list_contact,data));
 
                 }
-            });
+            });*/
 
         }
 

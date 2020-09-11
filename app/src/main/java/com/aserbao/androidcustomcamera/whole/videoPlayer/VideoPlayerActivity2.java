@@ -30,9 +30,15 @@ import com.aserbao.androidcustomcamera.whole.editVideo.VideoEditActivity;
 import com.aserbao.androidcustomcamera.whole.jiaozivideo.JZVideoPlayer;
 import com.aserbao.androidcustomcamera.whole.jiaozivideo.PublicVideoJZVideo;
 import com.aserbao.androidcustomcamera.whole.selCover.SelCoverTimeActivity;
+import com.kongzue.dialog.v3.MessageDialog;
+import com.kongzue.dialog.v3.WaitDialog;
+import com.obs.services.ObsClient;
+import com.obs.services.model.BucketStorageInfo;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -42,18 +48,17 @@ import static com.aserbao.androidcustomcamera.base.utils.StaticFinalValues.COMR_
 import static com.aserbao.androidcustomcamera.base.utils.StaticFinalValues.COMR_FROM_VIDEO_EDIT_TIME_ACTIVITY;
 
 
-public class VideoPlayerActivity2 extends AppCompatActivity  {
+public class VideoPlayerActivity2 extends AppCompatActivity {
     private static final String TAG = VideoPlayerActivity2.class.getSimpleName();
     @BindView(R.id.public_video_jz_video)
     PublicVideoJZVideo mPublicVideoJZVideo;
-
 
 
     @BindView(R.id.pop_video_loading_fl)
     FrameLayout mPopVideoLoadingFl;
 
     private RelativeLayout rlVideo;
-    private String  videoFilePath = "/storage/emulated/0/ych/123.mp4", mOnLineVideoFilePath;
+    private String videoFilePath = "/storage/emulated/0/ych/123.mp4", mOnLineVideoFilePath;
     private Context mContext;
 
     public static void launch(Activity activity, String outputPath) {
@@ -62,6 +67,9 @@ public class VideoPlayerActivity2 extends AppCompatActivity  {
         activity.startActivity(intent);
     }
 
+    private ObsClient obsClient;
+
+    String upOrDownPoint = "https://t002.obs.cn-east-2.myhuaweicloud.com/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +81,12 @@ public class VideoPlayerActivity2 extends AppCompatActivity  {
         setContentView(R.layout.activity_video_player2);
         ButterKnife.bind(this);
         mContext = this;
+
+        String endPoint = "https://obs.cn-east-2.myhuaweicloud.com";
+        String ak = "E8WBUTSHZETZTLHTLSIMA";
+        String sk = "WN0CuRakbsNJfWXXHp1l2ZaeMhD5EAfNi1FdHTBEB";
+        obsClient = new ObsClient(ak, sk, endPoint);
+
         initData();
         StatusBarUtil.transparencyBar(this);
     }
@@ -80,7 +94,6 @@ public class VideoPlayerActivity2 extends AppCompatActivity  {
     private void initData() {
         videoFilePath = getIntent().getStringExtra(StaticFinalValues.VIDEOFILEPATH);
     }
-
 
 
     private void playVideo() {
@@ -165,26 +178,24 @@ public class VideoPlayerActivity2 extends AppCompatActivity  {
     }
 
 
-
-
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (mPopVideoLoadingFl!= null && mPopVideoLoadingFl.getVisibility() == View.VISIBLE) {
+        if (mPopVideoLoadingFl != null && mPopVideoLoadingFl.getVisibility() == View.VISIBLE) {
             return true;
         } else {
             return super.dispatchTouchEvent(ev);
         }
     }
 
-    @OnClick({R.id.video_player2_edit_video_tv,  R.id.video_player2_sel_cover, R.id.back_iv,  R.id.video_player_tv_storage, R.id.video_player_tv_public})
+    @OnClick({R.id.video_player2_edit_video_tv, R.id.video_player2_sel_cover, R.id.back_iv, R.id.video_player_tv_storage, R.id.video_player_tv_public})
     public void onViewClicked(View view) {
 
         switch (view.getId()) {
 
             case R.id.video_player2_edit_video_tv:
                 Intent intent = new Intent(MyApplication.getContext(), VideoEditActivity.class);
-                intent.putExtra(StaticFinalValues.VIDEOFILEPATH,videoFilePath);
-                startActivityForResult(intent,COMR_FROM_VIDEO_EDIT_TIME_ACTIVITY);
+                intent.putExtra(StaticFinalValues.VIDEOFILEPATH, videoFilePath);
+                startActivityForResult(intent, COMR_FROM_VIDEO_EDIT_TIME_ACTIVITY);
                 break;
             case R.id.video_player2_sel_cover:
                 Intent intent2 = new Intent(VideoPlayerActivity2.this, SelCoverTimeActivity.class);
@@ -196,20 +207,52 @@ public class VideoPlayerActivity2 extends AppCompatActivity  {
                 break;
 
             case R.id.video_player_tv_storage:
-                break;
-            case R.id.video_player_tv_public:
                 storeToPhoto(videoFilePath);
                 break;
+            case R.id.video_player_tv_public:
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        WaitDialog.show((AppCompatActivity) mContext, "请稍候...");
+                        FileInputStream fis = null; // localfile为待上传的本地文件路径，需要指定到具体的文件名
+                        try {
+
+                            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                fis = new FileInputStream(new File(videoFilePath));
+                            } else {
+                                fis = new FileInputStream(new File(videoFilePath));
+
+                            }
+
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+
+                        BucketStorageInfo storageInfo = obsClient.getBucketStorageInfo("t002");
+
+                        Long bucketSize = storageInfo.getSize() / (1024 * 1024 * 1024);
+                        if (bucketSize < 30) {//桶容量小于30g，可以上传
+                            obsClient.putObject("t002", videoFilePath, fis);
+                        }
+                        WaitDialog.dismiss();
+                        MessageDialog.show((AppCompatActivity) mContext, "提示", "发布成功", "确定");
+                    }
+                }).start();
+
+                break;
         }
+
     }
+
 
     // 返回事件
     @Override
     public void onBackPressed() {
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         }
-        if (mPopVideoLoadingFl!= null && mPopVideoLoadingFl.getVisibility() != View.VISIBLE) {
+        if (mPopVideoLoadingFl != null && mPopVideoLoadingFl.getVisibility() != View.VISIBLE) {
             super.onBackPressed();
         }
     }
@@ -221,7 +264,7 @@ public class VideoPlayerActivity2 extends AppCompatActivity  {
         if (data == null) {
             return;
         }
-        switch (requestCode){
+        switch (requestCode) {
             case StaticFinalValues.COMR_FROM_VIDEO_EDIT_TIME_ACTIVITY:
                 videoFilePath = data.getStringExtra(StaticFinalValues.VIDEOFILEPATH);
                 playVideo();
@@ -241,7 +284,7 @@ public class VideoPlayerActivity2 extends AppCompatActivity  {
         String filename = task.getFilename();*/
         ContentValues localContentValues = getVideoContentValues(this, new File(path), System.currentTimeMillis());
         Uri localUri = localContentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, localContentValues);
-        Toast.makeText(mContext, "保存到相册成功，路径为"+ path, Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "保存到相册成功，路径为" + path, Toast.LENGTH_SHORT).show();
     }
 
 
